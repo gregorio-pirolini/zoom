@@ -1,142 +1,361 @@
-jQuery(function ($) {
-  const $lens = $("#large");
+jQuery(document).ready(function ($) {
+  console.log("zoom loaded");
 
-  const state = {
-    zoomRatio: 2,
-    lensSize: 220,
-    active: false,
-    pointerId: null,
-    holdTimer: null,
-    holdDelay: 180,
-    imgEl: null,
-  };
+  //!                                ____
+  //!   ____  ____  ____  ____ ___  / / /
+  //!  /_  / / __ \/ __ \/ __ `__ \/ / /
+  //!   / /_/ /_/ / /_/ / / / / / /_/_/
+  //!  /___/\____/\____/_/ /_/ /_(_|_)
 
-  const supportsHoverZoom = 
-    window.matchMedia("(hover: hover)").matches &&
-    window.matchMedia("(pointer: fine)").matches;
+  let imgPosLeft; //.zoom img position left
+  let imgPosTop; //.zoom img position top
+  let imgWidth;  //.zoom img width
+  let imgHeight; //.zoom img height
+  let prozent; //zoom factor
 
-  function getLargeImageUrl(src) { //remove -<numbers>x<numbers>from .zoom img src to get the large image src
-    return src.replace(/-\d+x\d+(?=\.(jpg|jpeg|png|webp)$)/i, "");
-  } 
+  let quotientWidth; //to calculate bg position
+  let quotientHeight;//to calculate bg position
+  let $bodyOffSetTop;//document scroll top
+  let $newBodyOffSetTop;//document scroll top after scroll
+  let $diffscroll; //difference of scrolls
 
-  function setLensBackground(url, displayedWidth) {
-    $lens.css("background-image", `url(${url})`);
-    const img = new Image();
-    img.src = url;
-    img.onload = () => {
-      state.zoomRatio = img.naturalWidth / displayedWidth;
-    };
-  }
+  let topLarge; //position top of large div
+  let leftLarge; //position left of large div
 
-  function showLens() { $lens.show(); }
-  function hideLens() { $lens.hide(); }
+  let xUp; //mouse x position
+  let yUp; //mouse y position
+  let $name; //the name of pix hovered .zoom img
+  let hasTouch = false; //is it on touchscreen or monitor? SET TO NOT
 
-  function startZoom(imgEl) {
-    state.active = true;
-    state.imgEl = imgEl;
-    $("body").addClass("zooming");
 
-    const src = imgEl.currentSrc || imgEl.src;
-    const largeUrl = getLargeImageUrl(src);
-    const displayedWidth = imgEl.getBoundingClientRect().width;
+ //touchscreen zoom variables
+ let isZoomingTouch = false;
+  let activePointerId = null;
+  let holdTimer = null;
+  let holdDelay = 180; // ms
 
-    setLensBackground(largeUrl, displayedWidth);
-    showLens();
-  }
 
-  function stopZoom() {
-    state.active = false;
-    state.pointerId = null;
-    state.imgEl = null;
-    $("body").removeClass("zooming");
-    hideLens();
-  }
+  //to know if screen or laptop computer
 
-  function updateLens(pageX, pageY) {
-    if (!state.active || !state.imgEl) return;
+  $("body").one("touchstart", function (e) {
+    hasTouch = true;
+    console.log("AM ON A SCRREN");
+    $(this).off(".noTouch");
+  });
 
-    const rect = state.imgEl.getBoundingClientRect();
+  // ZOOM START
+  $("body").on("mouseenter.noTouch", ".zoom img", function (e) {
+    console.log("ready for zoom");
 
-    // Convert rect (viewport) -> page coordinates
-    const imgPageLeft = rect.left + window.scrollX;
-    const imgPageTop = rect.top + window.scrollY;
-
-    const imgW = rect.width;
-    const imgH = rect.height;
-
-    // Cursor inside image (CSS px)
-    const x = pageX - imgPageLeft;
-    const y = pageY - imgPageTop;
-
-    if (x < 0 || y < 0 || x > imgW || y > imgH) {
-      stopZoom();
+    if (hasTouch === true) {
       return;
     }
 
-    const half = state.lensSize / 2;
+    let parentOffset = $(this).parent().offset();
+    //or $(this).offset(); if you really just want the current element's offset
+    let relX = e.pageX - parentOffset.left;
+    let relY = e.pageY - parentOffset.top;
+    // alert(` X ${relX} y ${relY}`);
+    console.log(` X ${relX} y ${relY}`);
 
-    // Position lens near cursor (page coords)
-    const lensLeft = pageX - half;
-    const lensTop = pageY - half;
+    xUp = e.pageX;
+    yUp = e.pageY;
+    $bodyOffSetTop = $(document).scrollTop();
+    console.log("zoom Works");
+    console.log("$bodyOffSetTop: " + $bodyOffSetTop);
+    
+    let src = this.currentSrc || $(this).attr("src");
+    $name = src.replace(/-\d+x\d+(?=\.(jpg|jpeg|png|webp)$)/i, "");
 
-    // Background offset so cursor point appears centered
-    const bgX = -(x * state.zoomRatio - half);
-    const bgY = -(y * state.zoomRatio - half);
+    //alert(name);
+    imgPosLeft = $(this).offset().left;
+    imgPosTop = $(this).offset().top;
+    //imgMarginTop= $('#content').height();
+    //imgMarginTop=78;
+    // console.log(imgMarginTop);
+    console.log("imgPosLeft: " + imgPosLeft);
+    console.log("imgPosTop: " + imgPosTop);
+    imgWidth = $(this).width();
+    imgHeight = $(this).height();
+    //console.log('imgWidth: '+imgWidth);
+    //console.log('imgHeight: '+imgHeight);
+    createNewDiv($name); //put bigPix in div
+    //show div
+  });
 
-    $lens.css({
-      left: lensLeft,
-      top: lensTop,
-      backgroundPosition: `${bgX}px ${bgY}px`,
-      backgroundSize: `${imgW * state.zoomRatio}px ${imgH * state.zoomRatio}px`,
+  ////////////////////////////////
+
+  $("body").on(
+    "mousewheel.noTouch DOMMouseScroll.noTouch",
+    ".zoom img",
+    function (e) {
+      // console.log('ready for zoom 2');
+      if (hasTouch === true) {
+        return;
+      }
+
+      //console.log('mousewheel DOMMouseScroll zoom 1')
+      //   console.log('scroll');
+      //   console.log('b4 scroll: '+ $bodyOffSetTop);
+      //
+      $newBodyOffSetTop = $(document).scrollTop();
+      //console.log('after scroll: '+ $newBodyOffSetTop);
+      // console.log('diff scroll: '+ ($bodyOffSetTop-$newBodyOffSetTop));
+      $diffscroll = $bodyOffSetTop - $newBodyOffSetTop;
+      $bodyOffSetTop = $newBodyOffSetTop;
+
+      whereAmIFunction(true, $diffscroll, "mousewheel");
+    }
+  );
+  ///////////////////////////
+
+  $("body").on("mousemove.noTouch", ".zoom img", function (e) {
+    console.log("mouse move");
+    if (hasTouch === true) {
+      console.log("i stop!!");
+      return;
+    }
+
+    let parentOffset = $(this).parent().offset();
+    //or $(this).offset(); if you really just want the current element's offset
+    let relX = e.pageX - parentOffset.left;
+    let relY = e.pageY - parentOffset.top;
+    // alert(` X ${relX} y ${relY}`);
+    // console.log(` X ${relX} y ${relY}`);
+    let imgWidth = $(this).attr("width");
+    let imgHeight = $(this).attr("height");
+
+    console.log("!!!!figureQuotient>imageQuotient");
+    xUp = e.pageX;
+    yUp = e.pageY;
+    whereAmIFunction(false, "", e);
+
+    // let ImgScrollWidth=
+    // let ImgScrollHeight=
+
+    xUp = e.pageX;
+    yUp = e.pageY;
+    console.log("imgWidth: " + imgWidth);
+    console.log("imgHeight: " + imgHeight);
+    console.log("imgPosLeft: " + imgPosLeft);
+    console.log("imgPosTop: " + imgPosTop);
+    console.log("xUp: " + xUp);
+    console.log("yUp: " + yUp);
+
+    whereAmIFunction(false, "", e);
+  });
+
+  $("body").on("mouseleave.noTouch", ".zoom img", function () {
+    if (hasTouch === true) {
+      return;
+    }
+    hideZoom("mouseleave");
+  });
+
+  //create new Div large
+  function createNewDiv(name) {
+    console.log("createNewDiv: " + name);
+    //console.log('createNewDiv(name)')
+
+    $("#large").css("background-image", "url(" + name + ")");
+    //$('#large').css('background-image','url('+urlupload+'centerMe.png)');
+    let img = new Image();
+    img.src = name;
+    //console.log(img.src);
+    $(img).on("load", function () {
+      let bgImgWidth = img.width;
+
+      console.log("......createNewDiv w:" + bgImgWidth);
+      prozent = bgImgWidth / imgWidth;
+      $("#large").css(
+  "background-size",
+  (imgWidth * prozent) + "px " + (imgHeight * prozent) + "px"
+);
     });
+
   }
 
-  // ---------- Desktop hover ----------
-  if (supportsHoverZoom) {
-    $("body").on("mouseenter", ".zoom img", function () {
-      startZoom(this);
-    });
+  function whereAmIFunction(scroll, pixels, e) {
+    console.log(
+      "...........................whereAmIFunction(scroll: " +
+        scroll +
+        ",pixels: " +
+        pixels +
+        ")"
+    );
+    //$('#bannerText').text('whereAmIFunction: '+scroll+", "+pixels+", "+from);
+    if ($("#large").css("display") !== "block") {
+      //alert('show');
+      $("#large").show();
+    }
 
-    $("body").on("mousemove", ".zoom img", function (e) {
-      updateLens(e.pageX, e.pageY);
-    });
+    if (!scroll) {
+      //console.log('not scroll');
+      //y = e.pageY;
+      //x =  e.pageX;
+      //xUp = e.originalEvent.pageX;
+      //yUp = e.originalEvent.pageY;
+    } else {
+      //console.log('scrolliiing: '+xUp+" "+yUp);
+      yUp -= $diffscroll;
+    }
+    //$('#large').text(touchingMe+' x: '+x)//y-100
+    //console.log('x:'+x);
+    //        console.log('y:'+y);
+    //
+    //console.log($('#large').width());
+    //    console.log ('imgPosLeft'+imgPosLeft);
+    //     console.log ('imgWidth'+imgWidth);
+    //     console.log ('imgPosTop'+imgPosTop);
+    //     console.log ('imgHeight'+imgHeight);
+    //     console.log ('x'+x);
+    //     console.log ('y'+y);
+    quotientWidth = 1 - (xUp - imgPosLeft) / (imgWidth / 2);
+    quotientHeight = 1 - (yUp - imgPosTop) / (imgHeight / 2);
 
-    $("body").on("mouseleave", ".zoom img", function () {
-      stopZoom();
-    });
+    // console.log('quotientWidth: '+quotientWidth +' quotientHeight: '+quotientHeight);
+    //quotientWidth=1;
+    //quotientHeight=1;
+    let quotientWidth100 = 100 - 100 * quotientWidth;
+    let quotientHeight100 = 100 - 100 * quotientHeight;
+    let bgLeft = (imgPosLeft - xUp) * prozent + quotientWidth100;
+    let bgTop = (imgPosTop - yUp) * prozent + quotientHeight100;
 
-    return;
+// ---- Clamp bg position so background never goes beyond image edges ----
+const lensW = $("#large").width();
+const lensH = $("#large").height();
+
+const bgW = imgWidth * prozent;
+const bgH = imgHeight * prozent;
+
+// If lens is bigger than bg (edge case), avoid inverted clamp ranges
+const safeBgW = Math.max(bgW, lensW);
+const safeBgH = Math.max(bgH, lensH);
+
+// Allowed bgLeft range: [-(bgW - lensW), 0]
+const minBgLeft = -(safeBgW - lensW);
+const minBgTop  = -(safeBgH - lensH);
+
+bgLeft = Math.min(0, Math.max(minBgLeft, bgLeft));
+bgTop  = Math.min(0, Math.max(minBgTop, bgTop));
+
+
+
+
+    topLarge = yUp - 100 + 80 * quotientHeight; //imgPosTop-100;//-(100*quotientHeight);
+    // console.log('2 imgMarginTop: '+imgMarginTop);
+    leftLarge = xUp - 100 + 80 * quotientWidth;
+    //console.log('topLarge: '+topLarge);
+    //console.log('leftLarge: '+leftLarge);
+    $("#large")
+      .css("top", topLarge) //y-100   .css('top',topLarge)
+      .css("left", leftLarge) //-100
+      .css("background-position", bgLeft + "px " + bgTop + "px ");
+
+    console.log("top: " + topLarge + " left: " + leftLarge);
+    console.log(
+      "imgPosLeft: " +
+        imgPosLeft +
+        " imgPosTop: " +
+        imgPosTop +
+        " imgWidth: " +
+        imgWidth +
+        " imgHeight: " +
+        imgHeight
+    );
+
+    if (
+      xUp < imgPosLeft ||
+      yUp < imgPosTop ||
+      xUp > imgPosLeft + imgWidth ||
+      yUp > imgPosTop + imgHeight
+    ) {
+      hideZoom("whereAmIFunction");
+    }
   }
 
-  // ---------- Touch: press & hold ----------
+  function hideZoom(from) {
+    console.log("hideZoom");
+    $("#large").hide();
+  }
+
+  //swipe END
+
+
+  // ----------------------------
+  // TOUCH SUPPORT (press & hold)
+  // - normal scrolling works
+  // - zoom activates only after holdDelay
+  // - while zooming, preventDefault so finger moves lens smoothly
+  // ----------------------------
+
+  // Let the browser scroll normally unless we are actively zooming
+  // (Best set in CSS too: .zoom img { touch-action: pan-y; } body.zooming { touch-action: none; })
+
   $("body").on("pointerdown", ".zoom img", function (e) {
-    if (e.pointerType === "mouse") return;
+    if (e.pointerType === "mouse") return; // desktop already handled by your code
 
-    state.pointerId = e.pointerId;
+    hasTouch = true; // mark touch mode
+    activePointerId = e.pointerId;
 
-    state.holdTimer = setTimeout(() => {
-      startZoom(e.currentTarget);
-      updateLens(e.pageX, e.pageY);
-    }, state.holdDelay);
+    // Set up image geometry (same as mouseenter)
+    let src = this.currentSrc || $(this).attr("src");
+    $name = src.replace(/-\d+x\d+(?=\.(jpg|jpeg|png|webp)$)/i, "");
+
+    imgPosLeft = $(this).offset().left;
+    imgPosTop = $(this).offset().top;
+    imgWidth = $(this).width();
+    imgHeight = $(this).height();
+
+    // Start timer: only activate zoom if user holds
+    holdTimer = setTimeout(() => {
+      isZoomingTouch = true;
+
+      // create background + compute "prozent"
+      createNewDiv($name);
+
+      // initial pointer position
+      xUp = e.pageX;
+      yUp = e.pageY;
+
+      // show + place lens
+      whereAmIFunction(false, "", e);
+
+      // prevent page from interpreting this as scroll/gesture while zooming
+      document.body.classList.add("zooming");
+    }, holdDelay);
   });
 
   $("body").on("pointermove", ".zoom img", function (e) {
     if (e.pointerType === "mouse") return;
-    if (state.pointerId !== e.pointerId) return;
+    if (activePointerId !== e.pointerId) return;
 
-    if (state.active) {
-      e.preventDefault(); // prevent scroll ONLY while zooming
-      updateLens(e.pageX, e.pageY);
-    }
+    // If not zooming yet, let the user scroll normally
+    if (!isZoomingTouch) return;
+
+    e.preventDefault(); // stop scrolling while zooming
+
+    xUp = e.pageX;
+    yUp = e.pageY;
+
+    whereAmIFunction(false, "", e);
   });
 
   $("body").on("pointerup pointercancel", ".zoom img", function (e) {
     if (e.pointerType === "mouse") return;
-    if (state.pointerId !== e.pointerId) return;
+    if (activePointerId !== e.pointerId) return;
 
-    clearTimeout(state.holdTimer);
-    state.holdTimer = null;
+    clearTimeout(holdTimer);
+    holdTimer = null;
 
-    stopZoom();
+    activePointerId = null;
+
+    if (isZoomingTouch) {
+      isZoomingTouch = false;
+      document.body.classList.remove("zooming");
+      hideZoom("pointerup");
+    }
   });
-});
+
+
+}); // JavaScript Document

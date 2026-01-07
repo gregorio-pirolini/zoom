@@ -1,5 +1,5 @@
 jQuery(document).ready(function ($) {
-  console.log("hello");
+  console.log("zoom loaded");
 
   //!                                ____
   //!   ____  ____  ____  ____ ___  / / /
@@ -7,25 +7,25 @@ jQuery(document).ready(function ($) {
   //!   / /_/ /_/ / /_/ / / / / / /_/_/
   //!  /___/\____/\____/_/ /_/ /_(_|_)
 
-  let imgPosLeft;
-  let imgPosTop;
-  let imgWidth;
-  let imgHeight;
-  let prozent;
+  let imgPosLeft; //.zoom img position left
+  let imgPosTop; //.zoom img position top
+  let imgWidth;  //.zoom img width
+  let imgHeight; //.zoom img height
+  let prozent; //zoom factor
 
-  let quotientWidth;
-  let quotientHeight;
-  let $bodyOffSetTop;
-  let $newBodyOffSetTop;
-  let $diffscroll;
+  let quotientWidth; //to calculate bg position
+  let quotientHeight;//to calculate bg position
+  let $bodyOffSetTop;//document scroll top
+  let $newBodyOffSetTop;//document scroll top after scroll
+  let $diffscroll; //difference of scrolls
 
-  let topLarge;
-  let leftLarge;
+  let topLarge; //position top of large div
+  let leftLarge; //position left of large div
 
-  let xUp;
-  let yUp;
-  let $name; //the name of pix hovered
-  let hasTouch = false; //is it on tpouchscreen or monitor? SET TO NOT
+  let xUp; //mouse x position
+  let yUp; //mouse y position
+  let $name; //the name of pix hovered .zoom img
+  let hasTouch = false; //is it on touchscreen or monitor? SET TO NOT
 
   //to know if screen or laptop computer
 
@@ -36,7 +36,6 @@ jQuery(document).ready(function ($) {
   });
 
   // ZOOM START
-  //////////////////////////
   $("body").on("mouseenter.noTouch", ".zoom img", function (e) {
     console.log("ready for zoom");
 
@@ -45,7 +44,7 @@ jQuery(document).ready(function ($) {
     }
 
     let parentOffset = $(this).parent().offset();
-    // //or $(this).offset(); if you really just want the current element's offset
+    //or $(this).offset(); if you really just want the current element's offset
     let relX = e.pageX - parentOffset.left;
     let relY = e.pageY - parentOffset.top;
     // alert(` X ${relX} y ${relY}`);
@@ -109,14 +108,13 @@ jQuery(document).ready(function ($) {
     }
 
     let parentOffset = $(this).parent().offset();
-    // //or $(this).offset(); if you really just want the current element's offset
+    //or $(this).offset(); if you really just want the current element's offset
     let relX = e.pageX - parentOffset.left;
     let relY = e.pageY - parentOffset.top;
     // alert(` X ${relX} y ${relY}`);
     // console.log(` X ${relX} y ${relY}`);
     let imgWidth = $(this).attr("width");
     let imgHeight = $(this).attr("height");
-    imageQuotient = imgWidth / imgHeight;
 
     console.log("!!!!figureQuotient>imageQuotient");
     xUp = e.pageX;
@@ -138,17 +136,14 @@ jQuery(document).ready(function ($) {
     whereAmIFunction(false, "", e);
   });
 
-  ///////////////////////////
   $("body").on("mouseleave.noTouch", ".zoom img", function () {
     if (hasTouch === true) {
       return;
     }
     hideZoom("mouseleave");
   });
-  ///////////////////////////
 
   //create new Div large
-
   function createNewDiv(name) {
     console.log("createNewDiv: " + name);
     //console.log('createNewDiv(name)')
