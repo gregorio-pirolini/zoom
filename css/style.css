@@ -54,3 +54,5 @@ img {
 .zoom {
   cursor:crosshair
 }
+.zoom img { touch-action: pan-y; }
+body.zooming { touch-action: none; }

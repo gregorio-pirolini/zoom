@@ -1,73 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zoom</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zoom Effect</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="js/zoom_new.js" defer></script>
+</head>
+<body>
+  <div id="large"></div>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <main class="container">
+    <h1>Zoom Effect</h1>
     
-<link rel="stylesheet" href="css/style.css" />
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="js/zoom.js"></script>
-  </head>
-  <body>
-    <div
-      id="large"
-      style="
-        background-image: url('img/lines.jpg');
-        display: none;"
-    ></div>
-    <div class="main">
-    <h1>Zoom</h1>
-     
-    
-          <div class="section" style="flex-basis: 100%">
-            <!-- section -->
-            <p>
-              <meta charset="utf-8" />Man kann mit der Mouse über das Bild gehen
-              um es vergrößert zu sehen.
-            </p>
-             
-          </div>
-          <!-- section -->
-      
-<div class="section" style="flex-basis: 100%"></div>
-  <div class="left"> 
-            <!--left -->
-            <figure class="wp-block-image size-large zoom">
-              <img
-                decoding="async"
-                width="1024"
-                height="1024"
-                src="img//lines-1024x1024.jpg"
-                alt=""
-                class="wp-image-332"
-                srcset="
-                  img/lines-1024x1024.jpg 1024w,
-                  img/lines-300x300.jpg    300w,
-                  img/lines-150x150.jpg    150w,
-                  img//lines-768x768.jpg   768w,
-                  img/lines-1536x1536.jpg 1536w,
-                  img/lines.jpg           2000w
-                "
-                sizes="(max-width: 1024px) 100vw, 1024px"
-              />
-            </figure>
-            <!-- /wp:image -->
-          </div>
-          <!-- left-->
+    <p class="intro">Move your mouse over the image to see it enlarged.</p>
+    <p class="note">Note: This zoom effect works  on desktop and on touch devices like iPad/mobile.</p>
 
-          <!-- wp:column -->
-          <div class="right">
-            <!--right -->
-            <p>Es funktioniert noch nicht für Ipad und Mobilegeräte.</p>
-            <!-- right -->
-          </div>
-</div>
-  </body>
+    <div class="content">
+      <div class="left">
+ <div class="zoom">
+        <img 
+          src="img/lines-1024x1024.jpg" 
+          alt="Abstract lines pattern"
+          width="1024" 
+          height="1024"
+          srcset="
+            img/lines-1024x1024.jpg 1024w,
+            img/lines-1536x1536.jpg 1536w,
+            img/lines.jpg 2000w,
+            img/lines-768x768.jpg 768w,
+            img/lines-300x300.jpg 300w,
+            img/lines-150x150.jpg 150w
+          "
+          sizes="(max-width: 1024px) 100vw, 1024px"
+          loading="lazy"
+        >
+         </div>
+         <div class="zoom">
+        <img 
+          src="img/lines90-1024x1024.jpg" 
+          alt="Abstract lines pattern"
+          width="1024" 
+          height="1024"
+          srcset="
+            img/lines90-1024x1024.jpg 1024w,
+            img/lines90-1536x1536.jpg 1536w,
+            img/lines90.jpg 2000w,
+            img/lines90-768x768.jpg 768w,
+            img/lines90-300x300.jpg 300w,
+            img/lines90-150x150.jpg 150w
+          "
+          sizes="(max-width: 1024px) 100vw, 1024px"
+          loading="lazy"
+        >
+         </div>
+      </div>
+
+      <div class="right">
+        <p>A closer look reveals intricate details in the pattern.</p>
+      </div>
+    </div>
+  </main>
+</body>
 </html>
